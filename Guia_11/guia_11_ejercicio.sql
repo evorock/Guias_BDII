@@ -1,4 +1,4 @@
-CREATE TABLE "AC_CLIENTE"  
+ CREATE TABLE "AC_CLIENTE"  
 ( "ID_CLIENTE" NUMBER NOT NULL ENABLE,  
   "NOMBRE" VARCHAR2(40 BYTE) NOT NULL ENABLE,  
   "APELLIDO" VARCHAR2(20 BYTE) NOT NULL ENABLE,  
@@ -11,7 +11,6 @@ CREATE TABLE "AC_CLIENTE"
 ( "ID_PRODUCTO" NUMBER NOT NULL ENABLE,  
   "NOMBRE" VARCHAR2(20 BYTE) NOT NULL ENABLE,  
   "PRECIOU" NUMBER DEFAULT 0.0 NOT NULL ENABLE,  
-  "tipo_producto" VARCHAR2(1) not null constraint CKC_tipo_producto check (tipo_producto in ('a','A','b','B','c','C')),
   CONSTRAINT "AC_PRODUCTO_PK" PRIMARY KEY ("ID_PRODUCTO") 
    );  
 
@@ -42,11 +41,11 @@ INSERT INTO "AC_CLIENTE" (ID_CLIENTE, NOMBRE, APELLIDO, FECHANAC, TIPO_CLIENTE) 
 INSERT INTO "AC_CLIENTE" (ID_CLIENTE, NOMBRE, APELLIDO, FECHANAC, TIPO_CLIENTE) VALUES ('9', 'beatiz', 'moreno', TO_DATE('06/06/2006', 'DD/MM/RR'), '01');
 INSERT INTO "AC_CLIENTE" (ID_CLIENTE, NOMBRE, APELLIDO, FECHANAC, TIPO_CLIENTE) VALUES ('10', 'jose ', 'garcia', TO_DATE('02/08/2011', 'DD/MM/RR'), '02');
 
-INSERT INTO "AC_PRODUCTO" (ID_PRODUCTO, NOMBRE, PRECIOU) VALUES ('1', 'fanta', 0.50,'a');
-INSERT INTO "AC_PRODUCTO" (ID_PRODUCTO, NOMBRE, PRECIOU) VALUES ('2', 'coca cola', 0.55,'b');
-INSERT INTO "AC_PRODUCTO" (ID_PRODUCTO, NOMBRE, PRECIOU) VALUES ('3', 'maruchan', 1.00),'c';
-INSERT INTO "AC_PRODUCTO" (ID_PRODUCTO, NOMBRE, PRECIOU) VALUES ('4', 'chocolate', 1.00,'A');
-INSERT INTO "AC_PRODUCTO" (ID_PRODUCTO, NOMBRE, PRECIOU) VALUES ('5', 'tipo', 0.35,'B');
+INSERT INTO "AC_PRODUCTO" (ID_PRODUCTO, NOMBRE, PRECIOU) VALUES ('1', 'fanta', 0.50);
+INSERT INTO "AC_PRODUCTO" (ID_PRODUCTO, NOMBRE, PRECIOU) VALUES ('2', 'coca cola', 0.55);
+INSERT INTO "AC_PRODUCTO" (ID_PRODUCTO, NOMBRE, PRECIOU) VALUES ('3', 'maruchan', 1.00);
+INSERT INTO "AC_PRODUCTO" (ID_PRODUCTO, NOMBRE, PRECIOU) VALUES ('4', 'chocolate', 1.00);
+INSERT INTO "AC_PRODUCTO" (ID_PRODUCTO, NOMBRE, PRECIOU) VALUES ('5', 'tipo', 0.35);
 
 INSERT INTO "AC_VENTAS" (ID_CLIENTE, ID_VENTA, MONTO, FECHA) VALUES ('1', '1', 20.00, TO_DATE('19/02/2011', 'DD/MM/RR'));
 INSERT INTO "AC_VENTAS" (ID_CLIENTE, ID_VENTA, MONTO, FECHA) VALUES ('1', '2', 50.00, TO_DATE('20/12/2012', 'DD/MM/RR'));
@@ -99,47 +98,19 @@ END LLENADO_MULTIDIMENSIONAL;
 
 execute LLENADO_MULTIDIMENSIONAL
 
---TABLA _MODIFICADA PARA EJERCICIO1
---modificacion apr adia especifico de la tabla multidimencional
-/*
-Se necesita agregar la dimension de dia, ya que se necesita visualizar solo los dias de un 
-mes en especifico, haga los cambios necesarios en el programa ETL y la tabla 
-multidimensional. 
-2. Se requiere tambien agregar la dimension de tipo de producto, haga los cambios 
-necesarios en la base de datos Transaccional, ETL y Multidimensional 
-3. Para los cambios anteriores vuelva a generar el cubo para que muestre las nuevas 
-dimensiones, si requiere agregar mas registros o actualizar datos hagalo
-*/
---tipo_producto,dia_mes
-
-CREATE TABLE "AC_MULTIDIMENSIONAL_eje1"
-( 
-  "mes" VARCHAR2(20 BYTE),
-  "dia" VARCHAR2(20 BYTE),
-  "PRODUCTO" VARCHAR2(20 BYTE),  
-  "MONTO_VENTAS" NUMBER DEFAULT 0,  
-  "FECHA" DATE,
-  "TIPO_CLIENTE" VARCHAR2(20 BYTE) 
+CREATE TABLE "AC_MULTI_MINE"
+( "MES" VARCHAR2(20 BYTE),
+  "ANIO" NUMBER,
+  "DIA" VARCHAR2(20 BYTE),
+  "MONTO" NUMBER
 );
 
-create or replace "llenado_AC_MULTIDIMENSIONAL_eje1" as
-begin
-insert into MULTI_MINE_1 select to_char(fecha,'MONTH') as MES,
-case when to_char(fecha,'D')=7 then 'SABADO'  when to_char(fecha,'D')=1 then 'DOMINGO'  
-when to_char(fecha,'D')=2 then 'LUNES'  when to_char(fecha,'D')=3 then 'MARTES'  when 
-to_char(fecha,'D')=4 then 'MIERCOLES'  when to_char(fecha,'D')=5 then 'JUEVES'  when 
-to_char(fecha,'D')=6 then 'VIERNES' END as DIA, t2.producto,sum(t4.subtotal),t3.fecha,t2.tipo_producto, t1.tipo_cliente from ac_cliente t1,
-ac_producto t2 ,ac_ventas t3 , ac_ventas_detalle t4  where  
-  t1.id_cliente= t3.id_cliente and t3.id_venta= t4.id_ventas and t2.id_producto= t4.id_producto group 
-by t2.nombre, t3.fecha, t1.tipo_cliente ,t2.tipo_producto ; 
-END llenado_AC_MULTIDIMENSIONAL_eje1; 
-/
+CREATE OR REPLACE PROCEDURE LLENADO_MULTIDIMENSIONAL_MIN AS
+BEGIN
+insert into ac_multi_mine select to_char(fecha,'MONTH') as MES,to_char(fecha,'YYYY') as ANIO, case when to_char(fecha,'D')=7 then 'SABADO' when to_char(fecha,'D')=1 then 'DOMINGO' when to_char(fecha,'D')=2 then 'LUNES' when to_char(fecha,'D')=3 then 'MARTES' when to_char(fecha,'D')=4 then 'MIERCOLES' when to_char(fecha,'D')=5 then 'JUEVES' when to_char(fecha,'D')=6 then 'VIERNES' END as DIA,sum(monto_ventas) as MONTO_VENTAS from ac_multidimensional group by to_char(fecha,'MONTH'),to_char(fecha,'YYYY'),to_char(fecha,'D');
+END LLENADO_MULTIDIMENSIONAL_MIN;
 
-Execute llenado_AC_MULTIDIMENSIONAL_eje1;
+execute LLENADO_MULTIDIMENSIONAL_MIN
 
 
-
-
-
-
-
+--TIPO_PRODUCTO  EDAD_CLIENTE 
