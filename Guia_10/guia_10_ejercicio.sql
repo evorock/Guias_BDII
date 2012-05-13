@@ -98,40 +98,16 @@ END LLENADO_MULTIDIMENSIONAL;
 
 execute LLENADO_MULTIDIMENSIONAL
 
---TABLA _MODIFICADA PARA EJERCICIO1
---modificacion apr adia especifico de la tabla multidimencional
-/*
-Se necesita agregar la dimension de dia, ya que se necesita visualizar solo los dias de un 
-mes en especifico, haga los cambios necesarios en el programa ETL y la tabla 
-multidimensional. 
-2. Se requiere tambien agregar la dimension de tipo de producto, haga los cambios 
-necesarios en la base de datos Transaccional, ETL y Multidimensional 
-3. Para los cambios anteriores vuelva a generar el cubo para que muestre las nuevas 
-dimensiones, si requiere agregar mas registros o actualizar datos hagalo
-*/
---tipo_producto,dia_mes
-
-CREATE TABLE AC_MULTIDIMENSIONAL_1
-( 
-  mes VARCHAR2(40),
-  dia VARCHAR2(40),
-  PRODUCTO VARCHAR2(40),  
-  MONTO_VENTAS NUMBER DEFAULT 0,  
-  FECHA DATE,
-  TIPO_CLIENTE VARCHAR2(40) 
+CREATE TABLE "AC_MULTI_MINE"
+( "MES" VARCHAR2(20 BYTE),
+  "ANIO" NUMBER,
+  "DIA" VARCHAR2(20 BYTE),
+  "MONTO" NUMBER
 );
 
-CREATE OR REPLACE PROCEDURE llenado_AC_MULTIDIMENSIONAL_1 as
-begin
-insert into AC_MULTIDIMENSIONAL_1 select to_char(fecha,'MONTH') as MES,
-case when to_char(fecha,'D')=7 then 'SABADO'  when to_char(fecha,'D')=1 then 'DOMINGO'  
-when to_char(fecha,'D')=2 then 'LUNES'  when to_char(fecha,'D')=3 then 'MARTES'  when 
-to_char(fecha,'D')=4 then 'MIERCOLES'  when to_char(fecha,'D')=5 then 'JUEVES'  when 
-to_char(fecha,'D')=6 then 'VIERNES' END as DIA, t2.producto,sum(t4.subtotal),t3.fecha,t2.tipo_producto, t1.tipo_cliente from ac_cliente t1,
-ac_producto t2 ,ac_ventas t3 , ac_ventas_detalle t4  where  
-  t1.id_cliente= t3.id_cliente and t3.id_venta= t4.id_ventas and t2.id_producto= t4.id_producto group 
-by t2.nombre, t3.fecha, t1.tipo_cliente ,t2.tipo_producto ; 
-END llenado_AC_MULTIDIMENSIONAL_1; 
+CREATE OR REPLACE PROCEDURE LLENADO_MULTIDIMENSIONAL_MIN AS
+BEGIN
+insert into ac_multi_mine select to_char(fecha,'MONTH') as MES,to_char(fecha,'YYYY') as ANIO, case when to_char(fecha,'D')=7 then 'SABADO' when to_char(fecha,'D')=1 then 'DOMINGO' when to_char(fecha,'D')=2 then 'LUNES' when to_char(fecha,'D')=3 then 'MARTES' when to_char(fecha,'D')=4 then 'MIERCOLES' when to_char(fecha,'D')=5 then 'JUEVES' when to_char(fecha,'D')=6 then 'VIERNES' END as DIA,sum(monto_ventas) as MONTO_VENTAS from ac_multidimensional group by to_char(fecha,'MONTH'),to_char(fecha,'YYYY'),to_char(fecha,'D');
+END LLENADO_MULTIDIMENSIONAL_MIN;
 /
-
-Execute llenado_AC_MULTIDIMENSIONAL_1;
+execute LLENADO_MULTIDIMENSIONAL_MIN
