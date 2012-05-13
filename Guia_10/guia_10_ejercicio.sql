@@ -111,19 +111,19 @@ dimensiones, si requiere agregar mas registros o actualizar datos hagalo
 */
 --tipo_producto,dia_mes
 
-CREATE TABLE AC_MULTIDIMENSIONAL_eje1
+CREATE TABLE AC_MULTIDIMENSIONAL_1
 ( 
-  mes VARCHAR2(20),
-  dia VARCHAR2(20),
-  PRODUCTO VARCHAR2(20),  
+  mes VARCHAR2(40),
+  dia VARCHAR2(40),
+  PRODUCTO VARCHAR2(40),  
   MONTO_VENTAS NUMBER DEFAULT 0,  
   FECHA DATE,
-  TIPO_CLIENTE VARCHAR2(20) 
+  TIPO_CLIENTE VARCHAR2(40) 
 );
 
-CREATE OR REPLACE PROCEDURE llenado_AC_MULTIDIMENSIONAL_eje1 as
+CREATE OR REPLACE PROCEDURE llenado_AC_MULTIDIMENSIONAL_1 as
 begin
-insert into AC_MULTIDIMENSIONAL_eje1 select to_char(fecha,'MONTH') as MES,
+insert into AC_MULTIDIMENSIONAL_1 select to_char(fecha,'MONTH') as MES,
 case when to_char(fecha,'D')=7 then 'SABADO'  when to_char(fecha,'D')=1 then 'DOMINGO'  
 when to_char(fecha,'D')=2 then 'LUNES'  when to_char(fecha,'D')=3 then 'MARTES'  when 
 to_char(fecha,'D')=4 then 'MIERCOLES'  when to_char(fecha,'D')=5 then 'JUEVES'  when 
@@ -131,7 +131,7 @@ to_char(fecha,'D')=6 then 'VIERNES' END as DIA, t2.producto,sum(t4.subtotal),t3.
 ac_producto t2 ,ac_ventas t3 , ac_ventas_detalle t4  where  
   t1.id_cliente= t3.id_cliente and t3.id_venta= t4.id_ventas and t2.id_producto= t4.id_producto group 
 by t2.nombre, t3.fecha, t1.tipo_cliente ,t2.tipo_producto ; 
-END llenado_AC_MULTIDIMENSIONAL_eje1; 
+END llenado_AC_MULTIDIMENSIONAL_1; 
 /
 
-Execute llenado_AC_MULTIDIMENSIONAL_eje1;
+Execute llenado_AC_MULTIDIMENSIONAL_1;
