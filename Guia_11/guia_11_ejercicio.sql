@@ -107,10 +107,44 @@ CREATE TABLE "AC_MULTI_MINE"
 
 CREATE OR REPLACE PROCEDURE LLENADO_MULTIDIMENSIONAL_MIN AS
 BEGIN
-insert into ac_multi_mine select to_char(fecha,'MONTH') as MES,to_char(fecha,'YYYY') as ANIO, case when to_char(fecha,'D')=7 then 'SABADO' when to_char(fecha,'D')=1 then 'DOMINGO' when to_char(fecha,'D')=2 then 'LUNES' when to_char(fecha,'D')=3 then 'MARTES' when to_char(fecha,'D')=4 then 'MIERCOLES' when to_char(fecha,'D')=5 then 'JUEVES' when to_char(fecha,'D')=6 then 'VIERNES' END as DIA,sum(monto_ventas) as MONTO_VENTAS from ac_multidimensional group by to_char(fecha,'MONTH'),to_char(fecha,'YYYY'),to_char(fecha,'D');
+insert into ac_multi_mine select to_char(fecha,'MONTH') as MES,to_char(fecha,'YYYY') as ANIO,
+case when to_char(fecha,'D')=7 then 'SABADO' when to_char(fecha,'D')=1 then 'DOMINGO' when to_char(fecha,'D')=2 then 'LUNES' when to_char(fecha,'D')=3 then 'MARTES' when to_char(fecha,'D')=4 then 'MIERCOLES' when to_char(fecha,'D')=5 then 'JUEVES' when to_char(fecha,'D')=6 then 'VIERNES' END as DIA,sum(monto_ventas) as MONTO_VENTAS from ac_multidimensional group by to_char(fecha,'MONTH'),to_char(fecha,'YYYY'),to_char(fecha,'D');
 END LLENADO_MULTIDIMENSIONAL_MIN;
 
 execute LLENADO_MULTIDIMENSIONAL_MIN
 
 
---TIPO_PRODUCTO  EDAD_CLIENTE 
+--TIPO_PRODUCTO  EDAD_CLIENTE monto diario 
+CREATE TABLE "AC_MULTI_eje_1"
+  (
+    "dias"         VARCHAR2(20 BYTE),
+    "monto_ventas" NUMBER,
+    "producto"     VARCHAR2(20 BYTE),
+    "edad"         NUMBER
+  );
+  
+--Procedimiento de carga
+create or replace
+procedure LLENADO_MULTIDIMENSIONAL_eje_1 as
+begin
+insert into AC_MULTI_eje_1
+select case 
+when to_char(ventas.fecha,'D')=7 then 'SABADO'  
+when to_char(ventas.fecha,'D')=1 then 'DOMINGO'  
+when to_char(ventas.fecha,'D')=2 then 'LUNES'  
+when to_char(ventas.fecha,'D')=3 then 'MARTES'  
+when to_char(ventas.fecha,'D')=4 then 'MIERCOLES'  
+when to_char(ventas.fecha,'D')=5 then 'JUEVES'  
+when to_char(ventas.fecha,'D')=6 then 'VIERNES' END as DIAS,
+sum(md.subtotal) as MONTO_VENTAS,
+prod.nombre AS producto,
+(2011 - to_number(to_char(cliente.fechanac,'YYYY'))) as edad
+from ac_ventas_detalle md,ac_ventas ventas, ac_cliente cliente, ac_producto prod
+where cliente.id_cliente=ventas.id_cliente and ventas.id_venta=md.id_ventas and prod.id_producto=md.id_producto
+group by to_char(ventas.fecha,'D') , prod.nombre ,(2011- to_number(to_char(cliente.fechanac,'YYYY')));
+END LLENADO_MULTIDIMENSIONAL_eje_1;
+/
+--Ejecución de procedimiento
+Begin
+LLENADO_MULTIDIMENSIONAL_eje_1();
+End;
